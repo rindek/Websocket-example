@@ -1,0 +1,4 @@
+A very simple chat client that uses websockets.
+It's just to demonstrate how we can use it.
+
+Check chat.js and client.html for more info.

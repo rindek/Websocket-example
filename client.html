@@ -1,0 +1,72 @@
+<!-- jquery for dom manipulation, it is not required to work with nodejs :) -->
+<script src="jquery.min.js"></script>
+<!-- we need to point to the place where our webservice is being deployed
+     and include socket.io/socket.io.js script. it just gives us this script
+     at pointed address in creating io object in chat.js file -->
+<script src="http://localhost:4001/socket.io/socket.io.js"></script>
+<script>
+    // we connect to webservice using io object
+    var socket = io.connect('http://localhost:4001');
+    // who we are? :)
+    var nick = null;
+
+    // we declare event 'receiveMessage', what client should do if it receives
+    // such event from webservice, in this case - one message
+    socket.on('receiveMessage', function(message) {
+        // we just add a new div add add it to the end of <div id="messages">
+        $("<div>").addClass('message').html(message).appendTo($("#messages"));
+    });
+
+    // as above, but it receives all messages that has been already sent
+    // by other clients. it is being received when client connects to server
+    socket.on('receiveMessages', function(messages) {
+        for (var v in messages) {
+            $("<div>").addClass('message').html(messages[v]).appendTo($("#messages"));
+        }
+    });
+
+    // we're receiving information about how many users are currently connected
+    // and we just update counter visible on website
+    socket.on('usersCount', function(counter) {
+        $("#connected span").html(counter);
+    });
+  
+    // on html we have two buttons, one for selecting nick we want to 
+    // be seen and second to send message
+    $(document).ready(function() {
+        // we just clicked '#emit' button, so we are 
+        // emiting event 'msg' to webservice with a message 
+        // in our input #msg
+        $("#emit").click(function(e) {
+            e.preventDefault();
+            socket.emit('msg', nick +": "+ $("#msg").val());
+            $("#msg").val('');
+        });
+
+        // this is just for selecing nick purposes, we don't send here
+        // anything to webservice
+        $("#nick_selected").click(function(e) {
+            nick = $("#nick").val();
+            $("#whatsyourname").hide();
+            $("#chatwindow").show();
+        });
+
+        socket.emit('getMessages');
+    });
+</script>
+<body>
+    <div id='chatwindow' style='display: none;'>
+        <div id='messages'></div>
+
+        <input type='text' name='msg' id='msg'/> 
+        <button id='emit'>send</button>
+        <div id='connected'>
+            users on-line: <span>0</span>
+        </div>
+    </div>
+
+    <div id='whatsyourname'>
+        Enter your nick: <input type='text' id='nick' /> <button id='nick_selected'>OK</button>
+    </div>
+
+</body>
